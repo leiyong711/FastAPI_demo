@@ -1,8 +1,4 @@
-# FastAPI_demo
-基础框架
-```
-目录结构说明
-
+FastAPI_demo
 ├─ app
 │	├─ __init__.py  视图注册
 │	├─ test_app
@@ -34,10 +30,3 @@
 ├─ main.py  入口文件
 ├─ requirements.txt  用到的第三方库
 └─ README.md
-```
-
-启动方式
->开发环境部署,直接运行python3 main.py文件
-
->生产环境部署
->gunicorn  main:app -w 20 --threads=10 -k  uvicorn.workers.UvicornWorker -b 0.0.0.0:80
