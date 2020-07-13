@@ -15,8 +15,7 @@
 │	├─ __init__.py
 │	├─ base_config.py  基础配置
 │	├─ mysql_connect.py  MySQL连接
-│	├─ redis_connect.py  redis连接
-│	└─ resp_code_config.py
+│	└─ redis_connect.py  redis连接
 ├─ logs  日志存储目录
 ├─ model  模板
 │	├─ __init__.py
