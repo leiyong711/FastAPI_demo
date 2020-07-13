@@ -67,7 +67,7 @@ async def validation_exception_handler(request, exc):
         """
         data = "内部异常"
         logger.error(f"{str(request.url).replace(str(request.base_url), '/')}  {data}")
-        return ErrorOUt(code=500, data=message, msg="失败")
+        return ErrorOUt(code=500, data=data, message="失败")
 
 
 if __name__ == "__main__":
