@@ -12,6 +12,7 @@ from app import create_app
 from utils.log import logger
 from utils.utils import ws_push
 from model.response_model import ErrorOUt
+from fastapi.responses import ORJSONResponse
 from starlette.templating import Jinja2Templates
 from config.base_config import WS_HEARTBEAT_TIMEOUT
 from fastapi.exceptions import RequestValidationError
@@ -60,14 +61,14 @@ async def validation_exception_handler(request, exc):
         """
         data = exc.errors()[0]["msg"]
         logger.error(f"{str(request.url).replace(str(request.base_url),'/')}  {str(exc.errors()[0]['loc'])} {str(data)} param=>{str(exc.body)}")
-        return ErrorOUt(code=500, data=data, message="失败")
+        return ORJSONResponse({"code": 500, "message": "失败", "data": f"{str(exc.errors()[0]['loc'])} {str(data)}"})
     else:
         """
         未知错误
         """
         data = "内部异常"
         logger.error(f"{str(request.url).replace(str(request.base_url), '/')}  {data}")
-        return ErrorOUt(code=500, data=message, msg="失败")
+        return ORJSONResponse({"code": 500, "message": "失败", "data": data})
 
 
 if __name__ == "__main__":

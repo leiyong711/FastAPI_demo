@@ -20,4 +20,4 @@ class SucceedOut(BaseModel):
 class ErrorOUt(BaseModel):
     message: str = "失败"
     code: int = 500
-    data: Dict = None
+    data: Any = None
