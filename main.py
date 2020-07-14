@@ -19,7 +19,6 @@ from fastapi.exceptions import RequestValidationError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-
 app = create_app()
 
 
