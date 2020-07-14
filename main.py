@@ -53,7 +53,7 @@ async def validation_exception_handler(request, exc):
         for i in ["Mozilla", "Chrome", "Safari"]:
             if i in headers:
                 return templates.TemplateResponse("404.html", {"request": request, "id": id})
-        return ErrorOUt(code=500, data=data, message="失败")
+        return ORJSONResponse({"code": 500, "message": "失败", "data": str(data)})
     elif isinstance(exc, RequestValidationError):
         """
         参数验证错误
