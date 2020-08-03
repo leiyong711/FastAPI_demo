@@ -5,15 +5,16 @@
 # creation time: 2020/6/30 10:03
 # Email: leiyong711@163.com
 
-
 import os
 import time
-from starlette.endpoints import WebSocketEndpoint, HTTPEndpoint
-from starlette.responses import HTMLResponse
-from starlette.routing import Route, WebSocketRoute
+import json
 from utils.log import logger
-from config.base_config import WS_POOL
-from config.redis_connect import redis_connect
+from config.base_config import WS_POOL, WS_POLL_GROUP
+from starlette.responses import HTMLResponse
+from mydbs.redis_connect import redis_connect
+from starlette.routing import Route, WebSocketRoute
+from starlette.endpoints import WebSocketEndpoint, HTTPEndpoint
+
 
 html = """
 <!DOCTYPE html>
@@ -118,12 +119,18 @@ class Echo(WebSocketEndpoint):
         :return:
         """
         socket_only = await self.alter_socket(websocket)
+        data = json.loads(data)
+        if data["subType"] == "subscription":
+            if data["messageType"] == "SMS":
+                logger.info("订阅短信推送成功")
+                WS_POLL_GROUP["SMS"][socket_only] = websocket
 
-        if "ping" == data:
+        elif data["subType"] == "heartbeat" and data["message"] == "ping":
             # logger.info(f"WebSocket收到 {socket_only} ID: {WS_POOL[socket_only][0]} 心跳 ==> {data}")
             # 更新心跳时间
+            data = {"messageType": "heartbeat", "message": "pong"}
             WS_POOL[socket_only][2] = int(time.time())
-            await WS_POOL[socket_only][1].send_text("pong")
+            await WS_POOL[socket_only][1].send_text(json.dumps(data))
         else:
             logger.info(f"WebSocket收到 {WS_POOL[socket_only][0]} 消息 ==> {data}")
 
@@ -137,6 +144,7 @@ class Echo(WebSocketEndpoint):
         socket_only = await self.alter_socket(websocket)
         # 删除连接池
         WS_POOL.pop(socket_only)
+        WS_POLL_GROUP["SMS"].pop(socket_only)
 
 
 # 心跳检测
@@ -169,19 +177,30 @@ async def heartbeatDetection(heartbeat_time):
 
     # 获取缓存中每个进程的连接数
     db_redis = redis_connect(db=3)
-    db_redis.hset('ws_number_pid', pid, len(WS_POOL))
-    t = db_redis.hgetall('ws_number_pid')
+    db_redis.hset('ws_connect_number', pid, len(WS_POOL))
+    db_redis.hset('ws_sms_subscription_number', pid, len(WS_POLL_GROUP["SMS"]))
+    connect_number = db_redis.hgetall('ws_connect_number')
+    sms_sub_number = db_redis.hgetall('ws_sms_subscription_number')
     db_redis.close()
 
     # 统计所有进程中的连接数
-    count = 0
-    for key, value in t.items():
-        count += int(value)
-    logger.info(f"当前WebSocket 连接数{count}")
+    connect_count = 0
+    for key, value in connect_number.items():
+        connect_count += int(value)
+
+    sms_count = 0
+    for key, value in sms_sub_number.items():
+        sms_count += int(value)
+    logger.debug(f"当前WebSocket 总连接数 {connect_count}, SMS订阅总数 {sms_count}")
 
 
 routes = [
     Route("/ws", Homepage),
     Route("/remov", Remov),
-    WebSocketRoute("/ws/ws", Echo)
+    WebSocketRoute("/ws/ws", Echo),
 ]
+
+
+
+
+

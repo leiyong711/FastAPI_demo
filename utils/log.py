@@ -10,6 +10,10 @@ import time
 from loguru import logger
 
 
+# logger.remove(handler_id=None)  # 清除之前的设置
+# logger.level('ERROR')
+
+
 # INFO级日志模板初始化配置
 logger.add(f"{os.path.join(os.getcwd(), 'logs')}/info_log_{time.strftime('%Y_%m_%d')}.log",
            level="INFO",
@@ -33,6 +37,7 @@ logger.add(f"{os.path.join(os.getcwd(), 'logs')}/error_log_{time.strftime('%Y_%m
            retention="10 days",  # 一段时间后会清空
            compression="zip"  # 保存为zip格式
            )
+
 data = """
 +---------------------------------------------------------------------------+
 |                  生活虽然一地鸡毛, 但仍要欢歌高进。                          |

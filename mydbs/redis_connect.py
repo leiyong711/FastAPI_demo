@@ -29,6 +29,42 @@ def redis_connect(db=3):
     Established an resid connection.
     """
     pool = redis.ConnectionPool(host=REDIS_HOST, port=int(
-        REDIS_PORT), password=REDIS_PWD, db=db, retry_on_timeout=True)
-    redis_client = redis.Redis(connection_pool=pool)
+        REDIS_PORT), password=REDIS_PWD, db=db, retry_on_timeout=True, decode_responses=True)
+    redis_client = redis.Redis(connection_pool=pool, decode_responses=True)
     return redis_client
+
+
+def get_redis_data(keys):
+    """
+    获取数据
+    :param keys:
+    :return:
+    """
+    db_redis = redis_connect(db=1)
+    data = db_redis.get(keys)
+    db_redis.close()
+    return data
+
+
+def set_redis_data(keys, value, expire=False, expire_time=-1):
+    """
+    设置数据
+    :param keys:
+    :return:
+    """
+    db_redis = redis_connect(db=1)
+    db_redis.set(keys,value)
+    if expire:
+        db_redis.expire(keys, expire_time)
+    db_redis.close()
+
+
+def del_redis_data(keys):
+    """
+    删除键
+    :param keys:
+    :return:
+    """
+    db_redis = redis_connect(db=1)
+    db_redis.delete(keys)
+    db_redis.close()

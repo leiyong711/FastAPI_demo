@@ -5,8 +5,20 @@
 #
 # Base = declarative_base()
 # metadata = Base.metadata
-from config.mysql_connect import Base, engine, SessionLocal
+from mydbs.mysql_connect import Base, SessionLocal, engine
 from sqlalchemy import Column, INTEGER, Float, TIMESTAMP, String, text
+
+
+class Member(Base):
+    __tablename__ = 'member'
+    __table_args__ = {'comment': '用户'}
+
+    id = Column(INTEGER, primary_key=True, comment='ID')
+    phone = Column(String(20), nullable=True, unique=True, comment='手机号')
+    email = Column(String(20), nullable=True, unique=True, comment='邮箱')
+    name = Column(String(20), nullable=True, unique=True, comment='用户名')
+    passwd = Column(String(128), nullable=False, comment='密码')
+    created_at = Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"), comment='数据时间戳')
 
 
 class Batteryout(Base):
@@ -36,18 +48,5 @@ class Solarenergyinput(Base):
     voltage = Column(Float, nullable=False, comment='太阳能电压')
     electricity = Column(Float, nullable=False, comment='太阳能电流')
     created_at = Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"), comment='数据时间戳')
-
-
-class User(Base):
-    __tablename__ = 'users'
-    __table_args__ = {'comment': 'The User model'}
-
-    id = Column(INTEGER, primary_key=True, comment='ID')
-    username = Column(String(20), nullable=False, unique=True, comment='???')
-    name = Column(String(50), comment='??')
-    family_name = Column(String(50))
-    category = Column(String(30), nullable=False, server_default=text("'misc'"))
-    password_hash = Column(String(128))
-    created_at = Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
 
 

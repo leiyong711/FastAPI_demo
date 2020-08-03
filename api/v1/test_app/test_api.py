@@ -11,10 +11,10 @@ import traceback
 from utils.log import logger
 from model.db_models import *
 from fastapi import APIRouter
-from utils.utils import params_dispose
-from config.redis_connect import redis_connect
-from model.response_model.params_model import *
-from model.response_model import SucceedOut, ErrorOUt
+from utils.common_utils import params_dispose
+from mydbs.redis_connect import redis_connect
+from model.api_model.params_model import *
+from model.api_model import SucceedOut, ErrorOUt
 
 
 db_mysql = SessionLocal()
@@ -27,27 +27,7 @@ class AA(BaseModel):
     data = SucceedOut
 
 
-@user_api.on_event("startup")
-async def startup():
-    """
-    redis数据库初始化
-    :return:
-    """
-    db_redis = redis_connect(db=3)
-    db_redis.delete('ws_number_pid')
-    db_redis.delete('ws_send_pid')
-    db_redis.delete('ws_push_time')
-    db_redis.delete('ws_push_msg')
-    db_redis.close()
-    logger.info("redis初始化完成")
-
-
-@user_api.on_event("shutdown")
-async def shutdown():
-    logger.info("结束")
-
-
-# @user_api.post("/user", response_model=Union[AA], summary="测试",)
+# @user_api.post("/user", api_model=Union[AA], summary="测试",)
 @user_api.post("/user", response_model=AA, summary="测试", include_in_schema=True, responses={422: {'model': ErrorOUt}})
 async def create_user(*, user: UserIn):
     logger.info("从网上")
@@ -58,11 +38,42 @@ async def create_user(*, user: UserIn):
     # return JSONResponse(status_code=HTTP_201_CREATED, content=MyOut)
 
 
+@user_api.post("/register", summary="注册", tags=["用户相关"], include_in_schema=True, responses={422: {'model': ErrorOUt}})
+async def register(*, registerdb: UserRegisterIn):
+    try:
+        params = await params_dispose(registerdb.dict())
+        # result = Solarenergyinput(**params)
+        # db_mysql.add(result)
+        # db_mysql.commit()
+        # db_mysql.refresh(result)
+        #
+        # # db_redis = await get_class()
+        # db_redis = redis_connect(db=3)
+        #
+        # # await db_redis.set("ws_push_msg", json.dumps(params))
+        # db_redis.set("ws_push_msg", json.dumps(params))
+        # # await db_redis.set("ws_push_time", int(time.time()))
+        # push_time = int(time.time())
+        # db_redis.set("ws_push_time", push_time)
+        # t = db_redis.hgetall('ws_number_pid')
+        # db_redis.close()
+        #
+        # db_redis = redis_connect(db=3)
+        # for key, value in t.items():
+        #     db_redis.hset('ws_send_pid', key, push_time)
+        # db_redis.close()
+
+        return SucceedOut(params)
+    except Exception:
+        logger.error(traceback.format_exc())
+        return SucceedOut(code=500, message="失败", data=False)
+
+
 
 @user_api.post("/insetDB", summary="数据库新增测试", tags=["数据库操作测试"], include_in_schema=True, responses={422: {'model': ErrorOUt}})
 async def insetDB(*, insetdb: InsetDBIn):
     try:
-        params = params_dispose(insetdb.dict())
+        params = await params_dispose(insetdb.dict())
         result = Solarenergyinput(**params)
         db_mysql.add(result)
         db_mysql.commit()
@@ -94,7 +105,7 @@ async def insetDB(*, insetdb: InsetDBIn):
 @user_api.post("/updateDB", summary="数据库修改", tags=["数据库操作测试"], include_in_schema=True, responses={422: {'model': ErrorOUt}})
 async def updateDB(*, updatedb: UpdateDBIn):
     try:
-        params = params_dispose(updatedb.dict())
+        params = await params_dispose(updatedb.dict())
         id = params.pop("id")
         result = db_mysql.query(Solarenergyinput).filter_by(id=id).first()
         for key in params:
@@ -109,7 +120,7 @@ async def updateDB(*, updatedb: UpdateDBIn):
 @user_api.post("/selectDB", summary="数据库查询", tags=["数据库操作测试"], include_in_schema=True, responses={422: {'model': ErrorOUt}})
 async def selectDB(*, selectdb: SelectDBIn):
     try:
-        params = params_dispose(selectdb.dict())
+        params = await params_dispose(selectdb.dict())
         if len(params) <= 2:
             # data = db.query(Solarenergyinput).all()
             # 分页查询
@@ -128,7 +139,7 @@ async def selectDB(*, selectdb: SelectDBIn):
 async def deleteDB(*, delectdb: DelectDBIn):
     # db = SessionLocal()
     try:
-        params = params_dispose(delectdb.dict())
+        params = await params_dispose(delectdb.dict())
         result = db_mysql.query(Solarenergyinput).filter_by(**params).first()
         if not result:
             return SucceedOut(code=500, message="失败", data="数据不存在")
